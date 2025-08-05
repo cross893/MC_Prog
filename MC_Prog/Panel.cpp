@@ -2,7 +2,7 @@
 
 //------------------------------------------------------------------------------------------------------------
 aFileDescriptor::aFileDescriptor(unsigned int attributes, unsigned int fileSizeLow, unsigned int fileSizeHigh, wchar_t* fileName)
-    : attributesStruct(attributes), fileNameStruct(fileName)
+: attributesStruct(attributes), fileNameStruct(fileName)
 {
     fileSizeStruct = ((unsigned long long)fileSizeHigh << 32) | (unsigned long long)fileSizeLow;
 }
