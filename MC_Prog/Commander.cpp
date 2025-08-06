@@ -15,6 +15,7 @@ void aMenuItem::draw(CHAR_INFO* screenBuffer, unsigned short screenWidth)
     int keyStrLen;
     sTextPosition keyPos(xPosStruct, yPosStruct, screenWidth, 0x07);
     keyStrLen = drawBotText(screenBuffer, keyPos, keyMenuStruct);
+
     sTextPosition namePos(xPosStruct + keyStrLen, yPosStruct, screenWidth, 0xb0);
     drawBotLimitedText(screenBuffer, namePos, nameMenuStruct, lenStruct);
 }

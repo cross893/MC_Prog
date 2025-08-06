@@ -24,6 +24,7 @@ void aPanel::draw()
 {
     drawPanels();
     drawFiles();
+    drawHighlight();
 }
 
 
@@ -41,6 +42,10 @@ void aPanel::getDirectoryFiles()
         aFileDescriptor* fileDescriptor = new aFileDescriptor(findData.dwFileAttributes, findData.nFileSizeLow, findData.nFileSizeHigh, findData.cFileName);
         files.push_back(fileDescriptor);
     }
+
+    currFileIndex = 0;
+    xOffsetHighlight = 0;
+    yOffsetHighlight = 0;
 }
 
 
@@ -142,19 +147,12 @@ void aPanel::drawPanels()
 //------------------------------------------------------------------------------------------------------------
 void aPanel::drawFiles()
 {
-    unsigned short attributes;
     int xOffset = 0;
     int yOffset = 0;
 
     for (auto* file : files)
     {
-        if (file->attributesStruct & FILE_ATTRIBUTE_DIRECTORY)
-            attributes = 0x1f;
-        else
-            attributes = 0x1b;
-
-        sTextPosition pos(xPosStruct + xOffset + 1, yPosStruct + yOffset + 2, screenWidthStruct, attributes);
-        drawBotText(screenBufferStruct, pos, file->fileNameStruct.c_str() );
+        drawOneFile(file, xOffset, yOffset, 0x10);
 
         ++yOffset;
 
@@ -169,4 +167,38 @@ void aPanel::drawFiles()
                 break;
         }
     }
+}
+
+
+
+
+//------------------------------------------------------------------------------------------------------------
+void aPanel::drawOneFile(aFileDescriptor* fileDescriptor, int xOffset, int yOffset, unsigned short bgAttributes)
+{
+    unsigned short attributes;
+
+    if (fileDescriptor->attributesStruct & FILE_ATTRIBUTE_DIRECTORY)
+        attributes = bgAttributes | 0x0f;
+    else
+        attributes = bgAttributes | 0x0b;
+
+    sTextPosition pos(xPosStruct + xOffset + 1, yPosStruct + yOffset + 2, screenWidthStruct, attributes);
+    //drawBotText(screenBufferStruct, pos, fileDescriptor->fileNameStruct.c_str() );
+    drawBotLimitedText(screenBufferStruct, pos, fileDescriptor->fileNameStruct.c_str(), widthStruct / 2 - 1);
+}
+
+
+
+
+//------------------------------------------------------------------------------------------------------------
+void aPanel::drawHighlight()
+{
+    aFileDescriptor* fileDescriptor;
+
+    if (currFileIndex >= files.size())
+        return;
+
+    fileDescriptor = files[currFileIndex];
+
+    drawOneFile(fileDescriptor, xOffsetHighlight, yOffsetHighlight, 0xd0);
 }

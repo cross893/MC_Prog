@@ -32,6 +32,8 @@ public:
 private:
     void drawPanels();
     void drawFiles();
+    void drawOneFile(aFileDescriptor* fileDescriptor, int xOffset, int yOffset, unsigned short bgAttributes);
+    void drawHighlight();
 
     unsigned short xPosStruct;
     unsigned short yPosStruct;
@@ -39,6 +41,10 @@ private:
     unsigned short heightStruct;
     unsigned short screenWidthStruct;
     CHAR_INFO* screenBufferStruct;
+
+    int currFileIndex;
+    int xOffsetHighlight;
+    int yOffsetHighlight;
 
     std::vector<aFileDescriptor*> files;
 };
