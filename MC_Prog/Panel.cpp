@@ -52,6 +52,30 @@ void aPanel::getDirectoryFiles()
 
 
 //------------------------------------------------------------------------------------------------------------
+void aPanel::moveHighlight(bool moveUp)
+{
+    if (moveUp)
+    {
+        if (currFileIndex > 0)
+        {
+            --currFileIndex;
+            --yOffsetHighlight;
+        }
+    }
+    else
+    {
+        if (currFileIndex + 1 < files.size())
+        {
+            ++currFileIndex;
+            ++yOffsetHighlight;
+        }
+    }
+}
+
+
+
+
+//------------------------------------------------------------------------------------------------------------
 void aPanel::drawPanels()
 {
     //┌┴┐│─┼├┤└┬┘ ╔╩╗║═╬╠╣╚╦╝ ╒╓╕╖╘╙╛╜╞╟╡╢╤╥╧╨╪╫

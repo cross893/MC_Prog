@@ -7,8 +7,7 @@ int main(void)
     if (!commander.init())
         return -1;
 
-    if (!commander.draw())
-        return -1;
+    commander.run();
 
     return 0;
 }

@@ -28,6 +28,7 @@ public:
 
     void draw();
     void getDirectoryFiles();
+    void moveHighlight(bool moveUp);
 
 private:
     void drawPanels();
@@ -46,5 +47,5 @@ private:
     int xOffsetHighlight;
     int yOffsetHighlight;
 
-    std::vector<aFileDescriptor*> files;
+    std::vector<aFileDescriptor *> files;
 };

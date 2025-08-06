@@ -29,12 +29,17 @@ public:
 	~asCommander();
 
 	bool init();
-	bool draw();
+	void run();
 
 private:
+	bool draw();
 	void addNextMenuItem(int& index, int& xPos, int xStep, const wchar_t* keyMenu, const wchar_t* nameMenu);
 	void buildMenu();
-	HANDLE stdHandle = 0;
+
+	bool canRun;
+	bool needRedraw;
+	HANDLE stdInHandle = 0;
+	HANDLE stdOutHandle = 0;
 	HANDLE screenBufferHandle = 0;
 	CHAR_INFO* screenBuffer = 0;
 	CONSOLE_SCREEN_BUFFER_INFO screenBufferInfo{};

@@ -26,6 +26,9 @@ void aMenuItem::draw(CHAR_INFO* screenBuffer, unsigned short screenWidth)
 //------------------------------------------------------------------------------------------------------------
 asCommander::~asCommander()
 {
+    if (!SetConsoleActiveScreenBuffer(stdOutHandle))
+        printf("SetConsoleActiveScreenBuffer failed - (%d)\n", GetLastError());
+
     delete leftPanel;
     delete rightPanel;
     delete screenBuffer;
@@ -42,9 +45,10 @@ bool asCommander::init()
 
     // Get a handle to the STDOUT screen buffer to copy from and
     // create a new screen buffer to copy to.
-    stdHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    stdInHandle = GetStdHandle(STD_INPUT_HANDLE);
+    stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     screenBufferHandle = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, CONSOLE_TEXTMODE_BUFFER, 0);
-    if (stdHandle == INVALID_HANDLE_VALUE || screenBufferHandle == INVALID_HANDLE_VALUE)
+    if (stdInHandle == INVALID_HANDLE_VALUE || stdOutHandle == INVALID_HANDLE_VALUE || screenBufferHandle == INVALID_HANDLE_VALUE)
     {
         printf("CreateConsoleScreenBuffer failed - (%d)\n", GetLastError());
         return false;
@@ -68,7 +72,7 @@ bool asCommander::init()
     memset(screenBuffer, 0, screenBufferSize * sizeof(CHAR_INFO));
 
     //// Copy the block from the screen buffer to the temp. buffer.
-    //fSuccess = ReadConsoleOutput(stdHandle, chiBuffer, coordBufSize, coordBufCoord, &srctReadRect); // screen buffer source rectangle
+    //fSuccess = ReadConsoleOutput(stdOutHandle, chiBuffer, coordBufSize, coordBufCoord, &srctReadRect); // screen buffer source rectangle
     //if (!fSuccess)
     //{
     //    printf("ReadConsoleOutput failed - (%d)\n", GetLastError());
@@ -91,6 +95,60 @@ bool asCommander::init()
     leftPanel->getDirectoryFiles();
 
     return true;
+}
+
+
+
+
+//------------------------------------------------------------------------------------------------------------
+void asCommander::run()
+{
+    unsigned long recordsCount;
+    INPUT_RECORD inputRecord[128];
+    
+    canRun = true;
+    needRedraw = true;
+
+    while (canRun)
+    {
+        if (PeekConsoleInput(stdInHandle, inputRecord, 128, &recordsCount))
+        {
+            if (ReadConsoleInput(stdInHandle, inputRecord, 1, &recordsCount))
+            {
+                if (recordsCount != 0)
+                {
+                    if (inputRecord[0].EventType == KEY_EVENT && inputRecord[0].Event.KeyEvent.bKeyDown)
+                    {
+                        switch (inputRecord[0].Event.KeyEvent.wVirtualKeyCode)
+                        {
+                        case VK_F10:
+                            canRun = false;
+                            break;
+
+                        case VK_UP:
+                            leftPanel->moveHighlight(true);
+                            needRedraw = true;
+                            break;
+
+                        case VK_DOWN:
+                            leftPanel->moveHighlight(false);
+                            needRedraw = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (needRedraw)
+        {
+            if (!draw())
+                return;
+            needRedraw = false;
+        }
+
+        Sleep(10);
+    }
 }
 
 
@@ -131,15 +189,6 @@ bool asCommander::draw()
     if (!WriteConsoleOutput(screenBufferHandle, screenBuffer, screenBufferInfo.dwSize, screenBufferPos, &screenBufferInfo.srWindow))  // dest. screen buffer rectangle
     {
         printf("WriteConsoleOutput failed - (%d)\n", GetLastError());
-        return false;
-    }
-
-    Sleep(150 * 1000);
-
-    // Restore the original active screen buffer.
-    if (!SetConsoleActiveScreenBuffer(stdHandle))
-    {
-        printf("SetConsoleActiveScreenBuffer failed - (%d)\n", GetLastError());
         return false;
     }
 
