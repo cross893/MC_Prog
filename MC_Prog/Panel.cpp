@@ -31,11 +31,19 @@ void aPanel::draw()
 
 
 //------------------------------------------------------------------------------------------------------------
-void aPanel::getDirectoryFiles()
+void aPanel::getDirectoryFiles(const std::wstring &currDir)
 {
     HANDLE searchHandle;
     WIN32_FIND_DATAW findData{};
-    searchHandle = FindFirstFileW(L"*.*", &findData);
+
+    for (auto* file : files)
+        delete file;
+
+    files.erase(files.begin(), files.end());
+
+    currentDirectory = currDir;
+
+    searchHandle = FindFirstFileW((currDir + L"\\*.*").c_str(), &findData);
 
     while (FindNextFileW(searchHandle, &findData))
     {
@@ -68,6 +76,29 @@ void aPanel::moveHighlight(bool moveUp)
         {
             ++currFileIndex;
             ++yOffsetHighlight;
+        }
+    }
+}
+
+
+
+
+//------------------------------------------------------------------------------------------------------------
+void aPanel::onEnter()
+{
+    aFileDescriptor* fileDescriptor = files[currFileIndex];
+
+    if (fileDescriptor->attributesStruct & FILE_ATTRIBUTE_DIRECTORY)
+    {
+        if (fileDescriptor->fileNameStruct == L"..")
+        {
+
+        }
+        else
+        {
+            std::wstring newCurrDir = currentDirectory + L"\\" + fileDescriptor->fileNameStruct;
+
+            getDirectoryFiles(newCurrDir);
         }
     }
 }
@@ -160,9 +191,6 @@ void aPanel::drawPanels()
     drawLinePos.screenWidthStruct = screenWidthStruct;
     drawLinePos.lenStruct = heightStruct - 4;
     drawLineVertical(screenBufferStruct, drawLinePos, drawLineSymbol);
-
-    //drawLineVertical(screenBufferStruct, drawLinePos, symbol);
-    //showColors(screenBufferStruct, drawLinePos, symbol);
 }
 
 

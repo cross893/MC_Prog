@@ -27,8 +27,9 @@ public:
     aPanel(unsigned short xPos, unsigned short yPos, unsigned short width, unsigned short height, CHAR_INFO* screenBuffer, unsigned short screenWidth);
 
     void draw();
-    void getDirectoryFiles();
+    void getDirectoryFiles(const std::wstring& currDir);
     void moveHighlight(bool moveUp);
+    void onEnter();
 
 private:
     void drawPanels();
@@ -46,6 +47,7 @@ private:
     int currFileIndex;
     int xOffsetHighlight;
     int yOffsetHighlight;
+    std::wstring currentDirectory;
 
     std::vector<aFileDescriptor *> files;
 };

@@ -40,11 +40,11 @@ asCommander::~asCommander()
 //------------------------------------------------------------------------------------------------------------
 bool asCommander::init()
 {
-    SMALL_RECT srctWriteRect;
     int screenBufferSize;
+    wchar_t currDir[MAX_PATH];
 
-    // Get a handle to the STDOUT screen buffer to copy from and
-    // create a new screen buffer to copy to.
+    GetCurrentDirectory(MAX_PATH, currDir);
+
     stdInHandle = GetStdHandle(STD_INPUT_HANDLE);
     stdOutHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     screenBufferHandle = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, CONSOLE_TEXTMODE_BUFFER, 0);
@@ -54,7 +54,6 @@ bool asCommander::init()
         return false;
     }
 
-    // Make the new screen buffer the active screen buffer.
     if (!SetConsoleActiveScreenBuffer(screenBufferHandle))
     {
         printf("SetConsoleActiveScreenBuffer failed - (%d)\n", GetLastError());
@@ -71,20 +70,6 @@ bool asCommander::init()
     screenBuffer = new CHAR_INFO[screenBufferSize];
     memset(screenBuffer, 0, screenBufferSize * sizeof(CHAR_INFO));
 
-    //// Copy the block from the screen buffer to the temp. buffer.
-    //fSuccess = ReadConsoleOutput(stdOutHandle, chiBuffer, coordBufSize, coordBufCoord, &srctReadRect); // screen buffer source rectangle
-    //if (!fSuccess)
-    //{
-    //    printf("ReadConsoleOutput failed - (%d)\n", GetLastError());
-    //    return 1;
-    //}
-
-    // Set the destination rectangle.
-    srctWriteRect.Top = 10;    // top lt: row 10, col 0
-    srctWriteRect.Left = 0;
-    srctWriteRect.Bottom = 11; // bot. rt: row 11, col 79
-    srctWriteRect.Right = 79;
-
     int halfWidth = screenBufferInfo.dwSize.X / 2;
 
     leftPanel = new aPanel(0, 0, halfWidth, screenBufferInfo.dwSize.Y - 2, screenBuffer, screenBufferInfo.dwSize.X);
@@ -92,7 +77,7 @@ bool asCommander::init()
 
     buildMenu();
 
-    leftPanel->getDirectoryFiles();
+    leftPanel->getDirectoryFiles(std::wstring(currDir));
 
     return true;
 }
@@ -121,6 +106,11 @@ void asCommander::run()
                     {
                         switch (inputRecord[0].Event.KeyEvent.wVirtualKeyCode)
                         {
+                        case VK_RETURN:
+                            leftPanel->onEnter();
+                            needRedraw = true;
+                            break;
+
                         case VK_F10:
                             canRun = false;
                             break;
@@ -163,30 +153,13 @@ bool asCommander::draw()
     leftPanel->draw();
     rightPanel->draw();
 
-    //sTextPosition pos(0, 0, 0, 0);
-    //const wchar_t* str = L"1";
-
-    //pos.xPosStruct = 0;
-    //pos.yPosStruct = screenBufferInfo.dwSize.Y - 1;
-    //pos.screenWidthStruct = screenBufferInfo.dwSize.X;
-    //pos.attributesStruct = 0x07;
-    //str = L"1";
-    //drawBotText(screenBuffer, pos, str);
-
-    //pos.xPosStruct = 1;
-    //pos.yPosStruct = screenBufferInfo.dwSize.Y - 1;
-    //pos.screenWidthStruct = screenBufferInfo.dwSize.X;
-    //pos.attributesStruct = 0xb0;
-    //str = L"Help  ";
-    //drawBotText(screenBuffer, pos, str);
-
     for (cycleMenuItemDraw = 0; cycleMenuItemDraw < 10; cycleMenuItemDraw++)
     {
         if (menuItems[cycleMenuItemDraw] != 0)
             menuItems[cycleMenuItemDraw]->draw(screenBuffer, screenBufferInfo.dwSize.X);
     }
 
-    if (!WriteConsoleOutput(screenBufferHandle, screenBuffer, screenBufferInfo.dwSize, screenBufferPos, &screenBufferInfo.srWindow))  // dest. screen buffer rectangle
+    if (!WriteConsoleOutput(screenBufferHandle, screenBuffer, screenBufferInfo.dwSize, screenBufferPos, &screenBufferInfo.srWindow))
     {
         printf("WriteConsoleOutput failed - (%d)\n", GetLastError());
         return false;
